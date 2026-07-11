@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Earn BD — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+<style>
+:root{
+  --blue:#2AABEE;--dark-blue:#1A8FCC;--bg:#F0F4F8;--card:#FFFFFF;
+  --navy:#17212B;--text:#1A1A2E;--text-sec:#6B7280;--accent:#00C851;
+  --danger:#FF3B30;--warning:#FF9500;--gold:#F59E0B;--silver:#9CA3AF;--bronze:#CD7F32;--platinum:#8B5CF6;
+  --grad:linear-gradient(135deg,#2AABEE 0%,#1A73E8 100%);
+  --grad-green:linear-gradient(135deg,#00C851,#00A040);
+  --grad-gold:linear-gradient(135deg,#F59E0B,#D97706);
+  --grad-red:linear-gradient(135deg,#FF3B30,#DC2626);
+  --grad-purple:linear-gradient(135deg,#8B5CF6,#6D28D9);
+  --shadow:0 4px 16px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.05);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.06);
+  --radius:14px;--radius-sm:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Hind Siliguri',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.num,.poppins{font-family:'Poppins',sans-serif;font-variant-numeric:tabular-nums}
+button{font-family:inherit;border:none;cursor:pointer;transition:transform .15s cubic-bezier(.34,1.56,.64,1),box-shadow .15s ease,opacity .15s ease}
+button:active{transform:scale(.94) translateY(1px);box-shadow:0 2px 6px rgba(0,0,0,.12)!important}
+button:disabled{opacity:.55;cursor:not-allowed}
+a{color:var(--blue);text-decoration:none}
+
+#wrap{max-width:720px;margin:0 auto;padding:14px;padding-bottom:80px}
+
+/* ===== LOGIN ===== */
+#login{position:fixed;inset:0;background:var(--grad);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+#login .box{background:#fff;border-radius:20px;padding:32px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+#login .logo-wrap{margin-bottom:20px}
+#login .logo-icon{width:64px;height:64px;border-radius:18px;background:var(--grad);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+#login .logo-icon i{font-size:32px;color:#fff}
+#login h1{color:var(--blue);font-size:24px;font-family:'Poppins',sans-serif;font-weight:700;margin-bottom:4px}
+#login p{color:var(--text-sec);margin-bottom:20px;font-size:13px}
+#login .input-wrap{position:relative;margin-bottom:12px}
+#login .input-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--text-sec)}
+#login input{width:100%;padding:12px 12px 12px 40px;border:1.5px solid #e6ecf2;border-radius:12px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+#login input:focus{border-color:var(--blue)}
+#login button{width:100%;background:var(--grad);color:#fff;padding:13px;border-radius:12px;font-weight:700;font-size:15px;box-shadow:0 6px 16px rgba(42,171,238,.3)}
+
+/* ===== HEADER ===== */
+.head{background:#fff;border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow-sm)}
+.head .brand{display:flex;align-items:center;gap:10px}
+.head .brand-icon{width:38px;height:38px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center}
+.head .brand-icon i{font-size:20px;color:#fff}
+.head h1{font-size:18px;color:var(--blue);font-family:'Poppins',sans-serif;font-weight:700}
+.head .sub{font-size:11px;color:var(--text-sec)}
+.head .logout-btn{background:var(--danger);color:#fff;padding:8px 14px;border-radius:10px;font-weight:600;font-size:12px;display:flex;align-items:center;gap:6px}
+.head .logout-btn i{font-size:16px}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:4px;overflow-x:auto;background:#fff;border-radius:var(--radius);padding:6px;margin-bottom:14px;scrollbar-width:none;box-shadow:var(--shadow-sm)}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{padding:9px 13px;background:transparent;color:var(--text-sec);border-radius:10px;font-weight:600;font-size:12px;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all .2s}
+.tab-btn i{font-size:17px}
+.tab-btn.active{background:var(--grad);color:#fff;box-shadow:0 3px 10px rgba(42,171,238,.3)}
+
+.panel{display:none;animation:fadeUp .22s ease-out}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== CARDS ===== */
+.card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+
+/* ===== OVERVIEW STATS ===== */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:#fff;border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.stat .ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.stat .ic.blue{background:var(--grad);color:#fff;box-shadow:0 4px 12px rgba(42,171,238,.3)}
+.stat .ic.green{background:var(--grad-green);color:#fff;box-shadow:0 4px 12px rgba(0,200,81,.3)}
+.stat .ic.gold{background:var(--grad-gold);color:#fff;box-shadow:0 4px 12px rgba(245,158,11,.3)}
+.stat .ic.red{background:var(--grad-red);color:#fff;box-shadow:0 4px 12px rgba(255,59,48,.3)}
+.stat .ic.purple{background:var(--grad-purple);color:#fff;box-shadow:0 4px 12px rgba(139,92,246,.3)}
+.stat .l{font-size:11px;color:var(--text-sec);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.stat .v{font-family:'Poppins',sans-serif;font-weight:700;font-size:20px;margin-top:2px}
+.stat .trend{font-size:11px;color:var(--accent);margin-top:2px;font-weight:600}
+
+/* ===== BUTTONS ===== */
+.btn{padding:9px 14px;background:var(--blue);color:#fff;border-radius:var(--radius-sm);font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.btn i{font-size:16px}
+.btn.ok{background:var(--grad-green);box-shadow:0 3px 8px rgba(0,200,81,.25)}
+.btn.danger{background:var(--grad-red);box-shadow:0 3px 8px rgba(255,59,48,.25)}
+.btn.sm{padding:6px 10px;font-size:11px}
+.btn.sm i{font-size:14px}
+.btn.outline{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.gold{background:var(--grad-gold)}
+.qa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.qa-grid .btn{justify-content:center}
+
+/* ===== FORMS ===== */
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;font-weight:700;margin-bottom:4px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.3px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1.5px solid #e6ecf2;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff;color:var(--text)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(42,171,238,.1)}
+.field textarea{min-height:70px;resize:vertical}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+
+/* ===== TOGGLE ===== */
+.toggle{width:46px;height:26px;background:#cbd5e1;border-radius:14px;position:relative;cursor:pointer;transition:background .25s;display:inline-block;vertical-align:middle;flex-shrink:0}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on{background:var(--blue)}
+.toggle.on::after{left:23px}
+
+/* ===== TABLE ===== */
+.tbl{width:100%;background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse}
+.tbl th{background:#f7fafd;padding:10px 10px;text-align:left;font-weight:700;font-size:11px;color:var(--text-sec);border-bottom:1px solid #eaeef3;text-transform:uppercase;letter-spacing:.3px}
+.tbl td{padding:10px 10px;border-bottom:1px solid #f3f6f9;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafcff}
+.scroll{overflow-x:auto}
+
+/* ===== SETTINGS ROW ===== */
+.set-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f3f6f9}
+.set-row:last-child{border-bottom:none}
+.set-row .ic{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#e8f4fd,#d4eafa);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.set-row .lbl{flex:1;font-weight:600;font-size:13px}
+.set-row .hint{font-size:11px;color:var(--text-sec);margin-top:1px}
+.set-row input{padding:8px 10px;border:1.5px solid #e6ecf2;border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;width:110px;outline:none;transition:border-color .2s}
+.set-row input:focus{border-color:var(--blue)}
+.set-row .save{background:var(--grad-green);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px}
+.set-row .save i{font-size:14px}
+
+/* ===== FILTER PILLS ===== */
+.pills{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{padding:7px 14px;border-radius:18px;background:#fff;color:var(--text);font-size:12px;font-weight:700;white-space:nowrap;border:1.5px solid #e6ecf2;cursor:pointer;transition:all .2s}
+.pill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ===== BADGES ===== */
+.badge{padding:3px 8px;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.badge.pending{background:#fef3c7;color:#92400e}
+.badge.approved,.badge.active{background:#dcfce7;color:#166534}
+.badge.rejected,.badge.banned,.badge.inactive{background:#fee2e2;color:#991b1b}
+
+/* ===== MODAL ===== */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:14px;backdrop-filter:blur(4px)}
+.modal.open{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-body{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-head .t{font-weight:700;font-size:16px;display:flex;align-items:center;gap:7px}
+.modal-head .t i{font-size:20px;color:var(--blue)}
+.modal-head .x{width:32px;height:32px;border-radius:50%;background:#f3f6f9;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-sec)}
+
+/* ===== PAYMENT METHODS ===== */
+.pm-item{background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm)}
+.pm-item .ico{width:46px;height:46px;border-radius:12px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.pm-item .ico i{font-size:24px}
+.pm-item .info{flex:1;min-width:0}
+.pm-item .t{font-weight:700;display:flex;align-items:center;gap:7px;font-size:14px}
+.pm-item .m{font-size:11px;color:var(--text-sec);margin-top:3px}
+.pm-item .acts{display:flex;gap:6px}
+
+/* ===== SECTION TITLE ===== */
+.sec{font-weight:700;font-size:13px;margin:14px 2px 10px;color:var(--text);display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:.4px}
+.sec i{font-size:17px;color:var(--blue)}
+
+/* ===== TOAST ===== */
+.toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;width:90%;max-width:420px;pointer-events:none}
+.toast{background:#1f2937;color:#fff;padding:12px 16px;border-radius:13px;font-weight:600;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:springDown .4s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:8px}
+.toast.success{background:#059669}
+.toast.warn{background:#d97706}
+.toast.danger{background:var(--danger)}
+.toast i{font-size:18px;flex-shrink:0}
+@keyframes springDown{from{transform:translateY(-80px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ===== EMPTY ===== */
+.empty{text-align:center;padding:32px;color:var(--text-sec)}
+.empty i{font-size:44px;color:#cdd5de;display:block;margin-bottom:10px}
+.empty .et{font-weight:600;color:var(--text);margin-bottom:4px}
+
+/* ===== LOG ROW ===== */
+.log-row{display:flex;gap:10px;padding:9px 2px;border-bottom:1px solid #f3f6f9;font-size:12px;align-items:center}
+.log-row .ts{color:var(--text-sec);min-width:110px;font-family:'Poppins',sans-serif;font-size:10px}
+.log-row .act{flex:1;font-weight:600}
+
+/* ===== ACTIVITY ITEM ===== */
+.act-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f3f6f9;align-items:center}
+.act-item:last-child{border-bottom:none}
+.act-item .ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.act-item .ic.blue{background:#e6f4fe;color:var(--blue)}
+.act-item .ic.green{background:#dcfce7;color:var(--accent)}
+.act-item .ic.gold{background:#fef3c7;color:var(--gold)}
+.act-item .txt{flex:1;font-size:13px}
+.act-item .txt .sub{font-size:11px;color:var(--text-sec);margin-top:1px}
+.act-item .time{font-size:10px;color:var(--text-sec);font-family:'Poppins',sans-serif;white-space:nowrap}
+
+/* ===== SEARCH INPUT ===== */
+.search-wrap{position:relative}
+.search-wrap i.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-sec);pointer-events:none}
+.search-wrap input{padding-left:34px}
+
+/* ===== OFFICER ITEM ===== */
+.officer-item{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f7fafd;border-radius:10px;margin-bottom:6px;border:1px solid #eaeef3}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login">
+  <div class="box">
+    <div class="logo-wrap">
+      <div class="logo-icon"><i class="ph-duotone ph-shield-check"></i></div>
+      <h1>Earn BD</h1>
+      <p>Admin Panel — সুরক্ষিত প্রবেশাধিকার</p>
+    </div>
+    <div class="input-wrap">
+      <i class="ph-duotone ph-lock-key"></i>
+      <input id="adminPass" type="password" placeholder="পাসওয়ার্ড লিখুন" onkeypress="if(event.key==='Enter')doLogin()">
+    </div>
+    <button onclick="doLogin()"><i class="ph-duotone ph-sign-in"></i> প্রবেশ করুন</button>
+  </div>
+</div>
+
+<div id="wrap" style="display:none">
+  <div class="head">
+    <div class="brand">
+      <div class="brand-icon"><i class="ph-duotone ph-chart-pie"></i></div>
+      <div>
+        <h1>Earn BD Admin</h1>
+        <div class="sub">ড্যাশবোর্ড কন্ট্রোল প্যানেল</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">
+      <i class="ph-duotone ph-sign-out"></i> Logout
+    </button>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-p="dash" onclick="goTab('dash')"><i class="ph-duotone ph-chart-pie"></i>Dashboard</button>
+    <button class="tab-btn" data-p="users" onclick="goTab('users')"><i class="ph-duotone ph-user-circle"></i>Users</button>
+    <button class="tab-btn" data-p="wd" onclick="goTab('wd')"><i class="ph-duotone ph-money"></i>Withdraw</button>
+    <button class="tab-btn" data-p="tasks" onclick="goTab('tasks')"><i class="ph-duotone ph-list-checks"></i>Tasks</button>
+    <button class="tab-btn" data-p="bc" onclick="goTab('bc')"><i class="ph-duotone ph-megaphone"></i>Broadcast</button>
+    <button class="tab-btn" data-p="anal" onclick="goTab('anal')"><i class="ph-duotone ph-chart-line"></i>Analytics</button>
+    <button class="tab-btn" data-p="logs" onclick="goTab('logs')"><i class="ph-duotone ph-scroll"></i>Logs</button>
+    <button class="tab-btn" data-p="pay" onclick="goTab('pay')"><i class="ph-duotone ph-credit-card"></i>পেমেন্ট</button>
+    <button class="tab-btn" data-p="set" onclick="goTab('set')"><i class="ph-duotone ph-gear"></i>Settings</button>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="panel active" id="p-dash">
+    <!-- Overview Stats -->
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="ic blue"><i class="ph-duotone ph-users"></i></div>
+        <div><div class="l">মোট ইউজার</div><div class="v num" id="sUsers">0</div><div class="trend" id="sTodayUsers">+0 আজ</div></div>
+      </div>
+      <div class="stat">
+        <div class="ic green"><i class="ph-duotone ph-coins"></i></div>
+        <div><div class="l">মোট আয়</div><div class="v num">$<span id="sEarn">0</span></div><div class="trend" id="sTodayEarn">আজ: $0</div></div>
+      </div>
+      <div class="stat">
+        <div class="ic gold"><i class="ph-duotone ph-clock-countdown"></i></div>
+        <div><div class="l">পেন্ডিং উইথড্র</div><div class="v num" id="sPending">0</div><div class="trend" id="sPendingAmt" style="color:var(--gold)">$0 মোট</div></div>
+      </div>
+      <div class="stat">
+        <div class="ic red"><i class="ph-duotone ph-arrow-up-right"></i></div>
+        <div><div class="l">মোট উইথড্র</div><div class="v num">$<span id="sWithdrawn">0</span></div></div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="ic purple"><i class="ph-duotone ph-television"></i></div>
+        <div><div class="l">আজকের Ads</div><div class="v num" id="sAds">0</div></div>
+      </div>
+      <div class="stat">
+        <div class="ic blue"><i class="ph-duotone ph-list-checks"></i></div>
+        <div><div class="l">সক্রিয় টাস্ক</div><div class="v num" id="sActiveTasks">0</div></div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="sec"><i class="ph-duotone ph-lightning"></i> দ্রুত পদক্ষেপ</div>
+      <div class="qa-grid">
+        <button class="btn ok" onclick="bonusAll()"><i class="ph-duotone ph-gift"></i> সবাইকে বোনাস</button>
+        <button class="btn outline" onclick="resetAds()"><i class="ph-duotone ph-arrow-counter-clockwise"></i> Ads রিসেট</button>
+        <button class="btn" onclick="goTab('bc')"><i class="ph-duotone ph-megaphone"></i> ব্রডকাস্ট</button>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+      <div class="sec"><i class="ph-duotone ph-activity"></i> সাম্প্রতিক কার্যকলাপ</div>
+      <div id="recentActivity"></div>
+    </div>
+
+    <!-- Top Earners Preview -->
+    <div class="card">
+      <div class="sec"><i class="ph-duotone ph-trophy"></i> শীর্ষ আয়কারী</div>
+      <div id="topEarners"></div>
+    </div>
+  </div>
+
+  <!-- ===== USERS ===== -->
+  <div class="panel" id="p-users">
+    <div class="card">
+      <div class="row">
+        <div class="search-wrap" style="flex:1">
+          <i class="ph-duotone ph-magnifying-glass si"></i>
+          <input id="userSearch" class="field input" placeholder="নাম বা UID খুঁজুন..." oninput="renderUsers()" style="padding:10px 10px 10px 34px;border:1.5px solid #e6ecf2;border-radius:10px;width:100%;font-family:inherit;font-size:13px;outline:none">
+        </div>
+        <select id="userFilter" onchange="renderUsers()" style="padding:10px;border:1.5px solid #e6ecf2;border-radius:10px;flex:0 0 120px;font-family:inherit;font-size:13px;outline:none">
+          <option value="all">সব ইউজার</option>
+          <option value="active">Active</option>
+          <option value="banned">Banned</option>
+        </select>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-sec)" id="userCount"></div>
+    </div>
+    <div class="tbl scroll">
+      <table>
+        <thead><tr>
+          <th>নাম</th><th>UID</th><th>ব্যালেন্স</th><th>আয়</th><th>রেফ</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th>
+        </tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== WITHDRAW ===== -->
+  <div class="panel" id="p-wd">
+    <div class="pills" id="wdPills">
+      <div class="pill active" data-f="all">সব</div>
+      <div class="pill" data-f="pending">পেন্ডিং</div>
+      <div class="pill" data-f="approved">অনুমোদিত</div>
+      <div class="pill" data-f="rejected">বাতিল</div>
+    </div>
+    <div id="wdStats" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap"></div>
+    <div class="tbl scroll">
+      <table>
+        <thead><tr>
+          <th>User</th><th>Method</th><th>Account</th><th>Amount</th><th>Date</th><th>Status</th><th>Action</th>
+        </tr></thead>
+        <tbody id="wdBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== TASKS ===== -->
+  <div class="panel" id="p-tasks">
+    <div style="margin-bottom:12px">
+      <button class="btn ok" onclick="openTaskModal()"><i class="ph-duotone ph-plus-circle"></i> নতুন টাস্ক</button>
+    </div>
+    <div id="taskList"></div>
+  </div>
+
+  <!-- ===== BROADCAST ===== -->
+  <div class="panel" id="p-bc">
+    <div class="card">
+      <div class="sec"><i class="ph-duotone ph-paper-plane-tilt"></i> নতুন ব্রডকাস্ট</div>
+      <div class="field"><label>শিরোনাম</label><input id="bcTitle" placeholder="নোটিফিকেশন শিরোনাম"></div>
+      <div class="field"><label>বিবরণ</label><textarea id="bcBody" placeholder="বার্তা লিখুন..."></textarea></div>
+      <div class="field" style="display:flex;align-items:center;gap:10px">
+        <span class="toggle" id="bcBanner" onclick="this.classList.toggle('on')"></span>
+        <label style="margin:0;font-weight:600;font-size:13px">হোম পেইজে ব্যানার দেখাও</label>
+      </div>
+      <button class="btn" onclick="sendBroadcast()" style="margin-top:6px"><i class="ph-duotone ph-paper-plane-tilt"></i> পাঠান</button>
+    </div>
+    <div class="sec"><i class="ph-duotone ph-clock-counter-clockwise"></i> পাঠানোর ইতিহাস</div>
+    <div id="bcHistory"></div>
+  </div>
+
+  <!-- ===== ANALYTICS ===== -->
+  <div class="panel" id="p-anal">
+    <div class="card"><div class="sec"><i class="ph-duotone ph-chart-line-up"></i> দৈনিক আয় (৩০ দিন)</div><canvas id="chartEarn" height="120"></canvas></div>
+    <div class="card"><div class="sec"><i class="ph-duotone ph-user-plus"></i> নতুন ইউজার (৩০ দিন)</div><canvas id="chartUsers" height="120"></canvas></div>
+    <div class="card"><div class="sec"><i class="ph-duotone ph-chart-pie-slice"></i> উইথড্র পদ্ধতি বিতরণ</div><canvas id="chartMethods" height="160"></canvas></div>
+  </div>
+
+  <!-- ===== LOGS ===== -->
+  <div class="panel" id="p-logs">
+    <div class="pills" id="logPills">
+      <div class="pill active" data-f="all">সব</div>
+      <div class="pill" data-f="ban">ব্যান</div>
+      <div class="pill" data-f="balance">ব্যালেন্স</div>
+      <div class="pill" data-f="withdraw">উইথড্র</div>
+      <div class="pill" data-f="settings">সেটিংস</div>
+      <div class="pill" data-f="task">টাস্ক</div>
+      <div class="pill" data-f="broadcast">ব্রডকাস্ট</div>
+    </div>
+    <div class="card" id="logList"></div>
+  </div>
+
+  <!-- ===== PAYMENT METHODS ===== -->
+  <div class="panel" id="p-pay">
+    <div style="margin-bottom:12px">
+      <button class="btn ok" onclick="openPMModal()"><i class="ph-duotone ph-plus-circle"></i> নতুন পদ্ধতি</button>
+    </div>
+    <div id="pmList"></div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="panel" id="p-set">
+    <div class="card"><div class="sec"><i class="ph-duotone ph-info"></i> App Info</div><div id="setAppInfo"></div></div>
+    <div class="card"><div class="sec"><i class="ph-duotone ph-television"></i> Ad Settings (Monetag)</div><div id="setAds"></div></div>
+    <div class="card"><div class="sec"><i class="ph-duotone ph-coins"></i> Economy</div><div id="setEcon"></div></div>
+    <div class="card"><div class="sec"><i class="ph-duotone ph-circles-three-plus"></i> Spin &amp; Card</div><div id="setSpin"></div></div>
+    <div class="card"><div class="sec"><i class="ph-duotone ph-calendar-check"></i> Check-in Rewards</div><div id="setCheckin"></div></div>
+    <div class="card"><div class="sec"><i class="ph-duotone ph-medal"></i> VIP Thresholds</div><div id="setVIP"></div></div>
+    <div class="card">
+      <div class="sec"><i class="ph-duotone ph-wrench"></i> System</div>
+      <div class="set-row">
+        <div class="ic"><i class="ph-duotone ph-warning"></i></div>
+        <div><div class="lbl">Maintenance Mode</div><div class="hint">সব ইউজার দেখবে মেইনটেন্যান্স স্ক্রিন</div></div>
+        <span class="toggle" id="maintToggle" onclick="toggleMaint(this)"></span>
+      </div>
+      <div class="set-row">
+        <div class="ic"><i class="ph-duotone ph-arrow-counter-clockwise"></i></div>
+        <div><div class="lbl">সব ইউজারের Ads রিসেট</div><div class="hint">আজকের Ad কাউন্ট শূন্য করে</div></div>
+        <button class="save" onclick="resetAds()"><i class="ph-duotone ph-arrow-counter-clockwise"></i> রিসেট</button>
+      </div>
+      <div class="set-row">
+        <div class="ic"><i class="ph-duotone ph-calendar-x"></i></div>
+        <div><div class="lbl">Check-in রিসেট</div><div class="hint">সব streak ও তারিখ মুছে</div></div>
+        <button class="save" onclick="resetCheckin()"><i class="ph-duotone ph-arrow-counter-clockwise"></i> রিসেট</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec"><i class="ph-duotone ph-shield-check"></i> অফিসার ম্যানেজমেন্ট</div>
+      <div class="row" style="margin-bottom:10px">
+        <input id="offUid" placeholder="User UID" style="padding:9px 10px;border:1.5px solid #e6ecf2;border-radius:9px;font-family:inherit;font-size:13px;outline:none">
+        <input id="offName" placeholder="নাম" style="padding:9px 10px;border:1.5px solid #e6ecf2;border-radius:9px;font-family:inherit;font-size:13px;outline:none">
+        <button class="btn ok" onclick="addOfficer()"><i class="ph-duotone ph-plus"></i> যোগ</button>
+      </div>
+      <div id="offList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal" id="taskModal">
+  <div class="modal-body">
+    <div class="modal-head">
+      <div class="t"><i class="ph-duotone ph-list-checks"></i> <span id="taskModalTitle">নতুন টাস্ক</span></div>
+      <button class="x" onclick="closeM('taskModal')"><i class="ph-duotone ph-x"></i></button>
+    </div>
+    <input type="hidden" id="tEditId">
+    <div class="field"><label>টাস্কের নাম</label><input id="tName" placeholder="টাস্কের বিবরণ"></div>
+    <div class="row">
+      <div class="field">
+        <label>ধরন</label>
+        <select id="tType">
+          <option value="telegram">Telegram</option>
+          <option value="youtube">YouTube</option>
+          <option value="facebook">Facebook</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field"><label>রিওয়ার্ড ($)</label><input id="tReward" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="field"><label>URL / লিঙ্ক</label><input id="tUrl" placeholder="https://..."></div>
+    <div class="field" style="display:flex;align-items:center;gap:10px">
+      <span class="toggle on" id="tActive" onclick="this.classList.toggle('on')"></span>
+      <label style="margin:0;font-weight:600;font-size:13px">সক্রিয় থাকবে</label>
+    </div>
+    <button class="btn ok" onclick="saveTask()" style="width:100%;justify-content:center;margin-top:4px"><i class="ph-duotone ph-floppy-disk"></i> সংরক্ষণ করুন</button>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal" id="userModal">
+  <div class="modal-body" id="userModalBody"></div>
+</div>
+
+<!-- Payment Method Modal -->
+<div class="modal" id="pmModal">
+  <div class="modal-body">
+    <div class="modal-head">
+      <div class="t"><i class="ph-duotone ph-credit-card"></i> <span id="pmModalTitle">নতুন পদ্ধতি</span></div>
+      <button class="x" onclick="closeM('pmModal')"><i class="ph-duotone ph-x"></i></button>
+    </div>
+    <input type="hidden" id="pmIsEdit" value="0">
+    <div class="row">
+      <div class="field"><label>পদ্ধতির নাম</label><input id="pmName" placeholder="যেমন: bKash"></div>
+      <div class="field">
+        <label>Key <span style="font-size:9px;color:var(--danger)">*একবার সেট করলে পরিবর্তন নয়</span></label>
+        <input id="pmKey" placeholder="bkash">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Icon URL (ঐচ্ছিক)</label><input id="pmIconUrl" placeholder="https://..."></div>
+      <div class="field"><label>Account Label</label><input id="pmAccountLabel" placeholder="বিকাশ নম্বর"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Placeholder</label><input id="pmAccountPlaceholder" placeholder="01XXXXXXXXX"></div>
+      <div class="field"><label>প্রক্রিয়াকরণ সময়</label><input id="pmProcessingTime" placeholder="১-৩ কার্যদিবস"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>সর্বনিম্ন ($)</label><input id="pmMinWithdraw" type="number" step="0.01" value="5"></div>
+      <div class="field"><label>সর্বোচ্চ ($) <span style="font-size:9px">(0=সীমাহীন)</span></label><input id="pmMaxWithdraw" type="number" step="0.01" value="0"></div>
+    </div>
+    <div class="field"><label>নির্দেশনা</label><textarea id="pmInstructions" placeholder="ইউজারকে কী দেখাবে..."></textarea></div>
+    <div class="field" style="display:flex;align-items:center;gap:10px">
+      <span class="toggle on" id="pmActive" onclick="this.classList.toggle('on')"></span>
+      <label style="margin:0;font-weight:600;font-size:13px">সক্রিয় থাকবে</label>
+    </div>
+    <button class="btn ok" onclick="savePaymentMethod()" style="width:100%;justify-content:center"><i class="ph-duotone ph-floppy-disk"></i> সংরক্ষণ করুন</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ========= FIREBASE ========= */
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAXcBlAnE5upBmcEbV7Y6QmLxo9GkjwGyM",
+  authDomain: "earn-money-24-2431a.firebaseapp.com",
+  databaseURL: "https://earn-money-24-2431a-default-rtdb.firebaseio.com",
+  projectId: "earn-money-24-2431a",
+  storageBucket: "earn-money-24-2431a.appspot.com",
+  messagingSenderId: "348442820920",
+  appId: "1:348442820920:web:0470df8115fb16847181cd",
+  measurementId: "G-04ML57TNF5"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+const fs=firebase.firestore();
+
+const $=id=>document.getElementById(id);
+function showToast(msg,type='info'){
+  const t=document.createElement('div');t.className='toast '+(type||'info');
+  const ic={success:'check-circle',warn:'warning',danger:'x-circle',info:'info'}[type]||'info';
+  t.innerHTML=`<i class="ph-duotone ph-${ic}"></i><span>${msg}</span>`;
+  $('toastWrap').appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='all .3s';setTimeout(()=>t.remove(),300);},3000);
+}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function getBDDate(){return new Date(Date.now()+6*3600*1000).toISOString().split('T')[0];}
+async function logAction(type,desc){await db.ref('auditLogs').push({type,desc,by:'admin',ts:Date.now()});}
+
+/* ========= LOGIN ========= */
+async function doLogin(){
+  const p=$('adminPass').value;
+  if(!p){showToast('পাসওয়ার্ড দিন','warn');return;}
+  try{
+    const snap=await db.ref('adminAuth/password').once('value');
+    if(snap.val()===null){
+      // First time setup: set the password
+      await db.ref('adminAuth/password').set(p);
+      sessionStorage.setItem('adminAuth','1');
+      $('login').style.display='none';$('wrap').style.display='block';
+      showToast('প্রথম লগইন — পাসওয়ার্ড সেট হয়েছে','success');
+      initAdmin();
+    }else if(snap.val()===p){
+      sessionStorage.setItem('adminAuth','1');
+      $('login').style.display='none';$('wrap').style.display='block';
+      initAdmin();
+    }else{showToast('ভুল পাসওয়ার্ড','danger');}
+  }catch(e){
+    console.error('Login error:',e);
+    showToast('ডেটাবেস সংযোগ ব্যর্থ — Firebase Rules চেক করুন','danger');
+  }
+}
+function logout(){sessionStorage.removeItem('adminAuth');location.reload();}
+if(sessionStorage.getItem('adminAuth')==='1'){$('login').style.display='none';$('wrap').style.display='block';setTimeout(initAdmin,100);}
+
+/* ========= TABS ========= */
+function goTab(p){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+  $('p-'+p).classList.add('active');
+  document.querySelector(`.tab-btn[data-p="${p}"]`).classList.add('active');
+  if(p==='anal')drawCharts();
+  if(p==='logs')renderLogs();
+  if(p==='users')renderUsers();
+  if(p==='set'){_settingsRendered=false;renderSettings();}
+  if(p==='wd')renderWD();
+  if(p==='bc')renderBC();
+}
+
+/* ========= STATE ========= */
+let users=[],withdrawals=[],tasks=[],pmethods=[],settings={},logs=[],bcasts=[],officers=[];
+let wdFilter='all',logFilter='all';
+
+function initAdmin(){
+  // Users — load all, no limit
+  db.ref('users').on('value', s=>{
+    users=[];
+    s.forEach(c=>{const v=c.val();if(v)users.push({id:c.key,...v});});
+    console.log('[Admin] Users loaded:',users.length);
+    renderDash();
+    renderUsers();
+  }, e=>console.error('Users load error:',e));
+
+  // Withdrawals
+  db.ref('withdrawals').on('value', s=>{
+    withdrawals=[];
+    s.forEach(c=>{const v=c.val();if(v)withdrawals.push({id:c.key,...v});});
+    renderDash();
+    renderWD();
+  }, e=>console.error('Withdrawals load error:',e));
+
+  // Tasks
+  db.ref('tasks').on('value', s=>{
+    tasks=[];
+    s.forEach(c=>{const v=c.val();if(v)tasks.push({id:c.key,...v});});
+    renderTasks();
+  });
+
+  // Payment methods
+  db.ref('withdrawMethods').on('value', s=>{
+    pmethods=[];
+    s.forEach(c=>{const v=c.val();if(v)pmethods.push({key:c.key,...v});});
+    renderPM();
+  });
+
+  // Settings
+  db.ref('settings').on('value', s=>{
+    settings=s.val()||{};
+    if(!_settingsRendered){renderSettings();}
+  });
+
+  // Audit logs
+  db.ref('auditLogs').orderByChild('ts').limitToLast(200).on('value', s=>{
+    logs=[];
+    s.forEach(c=>{const v=c.val();if(v)logs.push({id:c.key,...v});});
+    logs.reverse();
+    if($('p-logs').classList.contains('active'))renderLogs();
+  });
+
+  // Notifications (broadcast history)
+  db.ref('notifications').orderByChild('timestamp').limitToLast(100).on('value', s=>{
+    bcasts=[];
+    s.forEach(c=>{const v=c.val();if(v)bcasts.push({id:c.key,...v});});
+    bcasts.reverse();
+    renderBC();
+  });
+
+  // Officers
+  db.ref('officers').on('value', s=>{
+    officers=[];
+    s.forEach(c=>{const v=c.val();if(v)officers.push({id:c.key,...v});});
+    renderOfficers();
+  });
+
+  setInterval(()=>{if($('p-dash').classList.contains('active'))renderRecent();},30000);
+}
+
+/* ========= DASHBOARD ========= */
+function renderDash(){
+  $('sUsers').textContent=users.length;
+  const totEarn=users.reduce((s,u)=>s+(u.totalEarned||0),0);
+  $('sEarn').textContent=totEarn.toFixed(2);
+  const pending=withdrawals.filter(w=>w.status==='pending');
+  $('sPending').textContent=pending.length;
+  const pendingAmt=pending.reduce((s,w)=>s+(w.amount||0),0);
+  $('sPendingAmt').textContent='$'+pendingAmt.toFixed(2)+' মোট';
+  const totWith=withdrawals.filter(w=>w.status==='approved').reduce((s,w)=>s+(w.amount||0),0);
+  $('sWithdrawn').textContent=totWith.toFixed(2);
+  const today=getBDDate();
+  const todayAds=users.reduce((s,u)=>s+(u.lastAdDate===today?(u.todayAds||0):0),0);
+  $('sAds').textContent=todayAds;
+  const todayUsers=users.filter(u=>{const d=new Date(u.createdAt||0);return d.toISOString().split('T')[0]===today;}).length;
+  $('sTodayUsers').textContent=`+${todayUsers} আজ`;
+  const todayEarn=users.reduce((s,u)=>{return s+(u.lastAdDate===today?(u.todayAds||0)*(parseFloat(settings.perAdEarning)||0.5):0);},0);
+  $('sTodayEarn').textContent='আজ: $'+todayEarn.toFixed(2);
+  $('sActiveTasks').textContent=tasks.filter(t=>t.active).length;
+  renderRecent();
+  renderTopEarners();
+}
+
+function renderRecent(){
+  const items=[
+    ...withdrawals.slice(-8).map(w=>({ts:w.requestedAt,t:`${escapeHtml(w.name||'User')} উইথড্র চেয়েছেন — $${w.amount}`,ic:'money',cls:'gold'})),
+    ...users.filter(u=>u.createdAt).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,5).map(u=>({ts:u.createdAt,t:`নতুন ইউজার যোগ দিয়েছেন: ${escapeHtml(u.name||'User')}`,ic:'user-plus',cls:'green'}))
+  ].sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,8);
+  $('recentActivity').innerHTML=items.length?items.map(i=>`
+    <div class="act-item">
+      <div class="ic ${i.cls||'blue'}"><i class="ph-duotone ph-${i.ic}"></i></div>
+      <div class="txt"><div>${i.t}</div><div class="sub">${i.ts?new Date(i.ts).toLocaleString('bn-BD'):''}</div></div>
+    </div>`).join(''):'<div class="empty"><i class="ph-duotone ph-activity"></i><div class="et">কোন কার্যকলাপ নেই</div></div>';
+}
+
+function renderTopEarners(){
+  const top=[...users].sort((a,b)=>(b.totalEarned||0)-(a.totalEarned||0)).slice(0,5);
+  if(!top.length){$('topEarners').innerHTML='<div class="empty"><i class="ph-duotone ph-trophy"></i><div class="et">ডেটা নেই</div></div>';return;}
+  $('topEarners').innerHTML=top.map((u,i)=>{
+    const medals=['ph-trophy','ph-medal','ph-medal','ph-medal','ph-medal'];
+    const colors=['#F59E0B','#9CA3AF','#CD7F32','var(--blue)','var(--blue)'];
+    return `<div class="act-item">
+      <div class="ic blue" style="background:transparent;color:${colors[i]};width:30px;height:30px;font-size:20px"><i class="ph-duotone ${medals[i]}"></i></div>
+      <div class="txt"><div>${escapeHtml(u.name||'User')} <span class="badge active" style="font-size:9px">#${i+1}</span></div><div class="sub">UID: ${u.id}</div></div>
+      <div style="font-family:'Poppins',sans-serif;font-weight:700;color:var(--blue)">$${parseFloat(u.totalEarned||0).toFixed(2)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function bonusAll(){
+  const amt=parseFloat(prompt('সবাইকে কত $ বোনাস দেবেন?','0.1'));
+  if(!amt||amt<=0)return;
+  if(!confirm(`${users.length} জন ইউজারকে $${amt} করে বোনাস দেওয়া হবে। নিশ্চিত করুন?`))return;
+  for(const u of users){
+    await db.ref('users/'+u.id+'/balance').transaction(b=>(b||0)+amt);
+    await db.ref('users/'+u.id+'/totalEarned').transaction(t=>(t||0)+amt);
+  }
+  showToast(`সবাইকে $${amt} বোনাস দেওয়া হয়েছে`,'success');
+  logAction('balance',`Bulk bonus $${amt} to ${users.length} users`);
+}
+
+async function resetAds(){
+  if(!confirm('সব ইউজারের আজকের Ads কাউন্ট রিসেট হবে?'))return;
+  const upd={};
+  users.forEach(u=>{upd[`users/${u.id}/todayAds`]=0;upd[`users/${u.id}/lastAdDate`]='';});
+  await db.ref().update(upd);
+  showToast('Ads রিসেট সম্পন্ন','success');
+  logAction('settings','Ads counter reset');
+}
+
+async function resetCheckin(){
+  if(!confirm('সব ইউজারের Check-in streak রিসেট হবে?'))return;
+  const upd={};
+  users.forEach(u=>{upd[`users/${u.id}/checkInStreak`]=0;upd[`users/${u.id}/lastCheckIn`]='';});
+  await db.ref().update(upd);
+  showToast('Check-in রিসেট সম্পন্ন','success');
+  logAction('settings','Check-in reset');
+}
+
+/* ========= USERS ========= */
+function renderUsers(){
+  if(!$('usersBody'))return;
+  const q=($('userSearch')?.value||'').toLowerCase().trim();
+  const f=$('userFilter')?.value||'all';
+  let arr=users.filter(u=>{
+    if(!u||!u.id)return false;
+    if(f==='active'&&u.banned)return false;
+    if(f==='banned'&&!u.banned)return false;
+    if(q&&!`${u.name||''} ${u.id} ${u.username||''}`.toLowerCase().includes(q))return false;
+    return true;
+  });
+  if($('userCount'))$('userCount').textContent=`মোট ${users.length} জন • ফিল্টার: ${arr.length} জন`;
+  // Show all matching users (no artificial slice limit)
+  $('usersBody').innerHTML=arr.map(u=>`<tr>
+    <td style="font-weight:600">${escapeHtml(u.name||'-')}</td>
+    <td class="num" style="font-size:11px">${u.id}</td>
+    <td class="num">$${parseFloat(u.balance||0).toFixed(2)}</td>
+    <td class="num">$${parseFloat(u.totalEarned||0).toFixed(2)}</td>
+    <td class="num">${u.referralCount||0}</td>
+    <td><span class="badge ${u.banned?'banned':'active'}">${u.banned?'Banned':'Active'}</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn sm" onclick="viewUser('${escapeHtml(u.id)}')" style="margin-right:4px"><i class="ph-duotone ph-eye"></i></button>
+      <button class="btn sm danger" onclick="toggleBan('${escapeHtml(u.id)}')">${u.banned?'Unban':'Ban'}</button>
+    </td>
+  </tr>`).join('')||'<tr><td colspan="7"><div class="empty">কোন ইউজার নেই</div></td></tr>';
+}
+
+function viewUser(id){
+  const u=users.find(x=>x.id===id);if(!u)return;
+  const bal=parseFloat(u.balance||0);
+  const earn=parseFloat(u.totalEarned||0);
+  $('userModalBody').innerHTML=`
+    <div class="modal-head">
+      <div class="t"><i class="ph-duotone ph-user-circle"></i>${escapeHtml(u.name||'User')}</div>
+      <button class="x" onclick="closeM('userModal')"><i class="ph-duotone ph-x"></i></button>
+    </div>
+    <div class="field"><label>UID</label><input value="${u.id}" readonly style="background:#f7fafd;color:var(--text-sec)"></div>
+    <div class="row" style="margin-bottom:14px">
+      <div style="flex:1;background:#f0fdf4;border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:11px;color:#6B7280;margin-bottom:2px">বর্তমান ব্যালেন্স</div>
+        <div style="font-size:20px;font-weight:800;color:#00C851">$${bal.toFixed(4)}</div>
+      </div>
+      <div style="flex:1;background:#eff6ff;border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:11px;color:#6B7280;margin-bottom:2px">মোট আয়</div>
+        <div style="font-size:20px;font-weight:800;color:#2563EB">$${earn.toFixed(2)}</div>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>💰 ব্যালেন্স যোগ করুন ($)</label>
+      <div class="row" style="gap:8px;margin-top:4px">
+        <input id="uAddAmt" type="number" step="0.01" min="0" placeholder="0.00" style="flex:1">
+        <button class="btn ok" onclick="addUserBalance('${u.id}',${bal},${earn})" style="white-space:nowrap">
+          <i class="ph-duotone ph-plus-circle"></i> যোগ করুন
+        </button>
+      </div>
+      <div style="font-size:11px;color:#6B7280;margin-top:4px">⚡ Balance ও Total Earned দুটোতেই যোগ হবে</div>
+    </div>
+    <details style="margin-bottom:14px">
+      <summary style="font-size:12px;color:#6B7280;cursor:pointer;padding:6px 0">⚙️ ম্যানুয়ালি সেট করুন (অ্যাডভান্সড)</summary>
+      <div class="row" style="margin-top:8px">
+        <div class="field"><label>Balance ($)</label><input id="uBal" type="number" step="0.0001" value="${bal.toFixed(4)}"></div>
+        <div class="field"><label>Total Earned ($)</label><input id="uEarn" type="number" step="0.01" value="${earn.toFixed(2)}"></div>
+      </div>
+      <button class="btn" onclick="saveUser('${u.id}')" style="width:100%;justify-content:center;margin-top:4px">
+        <i class="ph-duotone ph-floppy-disk"></i> ম্যানুয়ালি সেভ
+      </button>
+    </details>
+    <div style="font-size:11px;color:var(--text-sec);margin-bottom:12px">
+      <i class="ph-duotone ph-calendar" style="font-size:13px"></i>
+      যোগদান: ${new Date(u.createdAt||Date.now()).toLocaleString('bn-BD')} &nbsp;|&nbsp; রেফ: ${u.referralCount||0} জন
+    </div>
+    <button class="btn danger" onclick="toggleBan('${u.id}');closeM('userModal')" style="width:100%;justify-content:center">
+      <i class="ph-duotone ph-prohibit"></i> ${u.banned?'আনব্যান করুন':'ব্যান করুন'}
+    </button>`;
+  $('userModal').classList.add('open');
+}
+
+async function addUserBalance(id, currentBal, currentEarn){
+  const add=parseFloat($('uAddAmt').value)||0;
+  if(add<=0){showToast('পরিমাণ দিন','warn');return;}
+  const newBal=parseFloat((currentBal+add).toFixed(4));
+  const newEarn=parseFloat((currentEarn+add).toFixed(4));
+  try{
+    await db.ref('users/'+id).update({balance:newBal, totalEarned:newEarn});
+    showToast('✓ $'+add.toFixed(2)+' যোগ হয়েছে → Balance: $'+newBal.toFixed(4),'success');
+    closeM('userModal');
+    logAction('balance','+$'+add+' added to user '+id+'. New balance: $'+newBal);
+  }catch(e){showToast('ব্যর্থ: '+e.message,'danger');}
+}
+
+async function saveUser(id){
+  const bal=parseFloat($('uBal').value)||0;
+  const earn=parseFloat($('uEarn').value)||0;
+  try{
+    await db.ref('users/'+id).update({balance:bal,totalEarned:earn});
+    showToast('সংরক্ষণ সম্পন্ন','success');
+    closeM('userModal');
+    logAction('balance','User '+id+' manually set: balance=$'+bal+', totalEarned=$'+earn);
+  }catch(e){showToast('ব্যর্থ: '+e.message,'danger');}
+}
+
+async function toggleBan(id){
+  const u=users.find(x=>x.id===id);if(!u)return;
+  await db.ref('users/'+id+'/banned').set(!u.banned);
+  showToast(u.banned?'আনব্যান হয়েছে':'ব্যান হয়েছে','success');
+  logAction('ban',`User ${id} ${u.banned?'unbanned':'banned'}`);
+}
+
+/* ========= WITHDRAW ========= */
+document.addEventListener('click',e=>{
+  if(e.target.matches('#wdPills .pill')){document.querySelectorAll('#wdPills .pill').forEach(p=>p.classList.remove('active'));e.target.classList.add('active');wdFilter=e.target.dataset.f;renderWD();}
+  if(e.target.matches('#logPills .pill')){document.querySelectorAll('#logPills .pill').forEach(p=>p.classList.remove('active'));e.target.classList.add('active');logFilter=e.target.dataset.f;renderLogs();}
+});
+
+function renderWD(){
+  let arr=[...withdrawals].sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
+  if(wdFilter!=='all')arr=arr.filter(w=>w.status===wdFilter);
+  // Stats
+  const pendingAmt=arr.filter(w=>w.status==='pending').reduce((s,w)=>s+(w.amount||0),0);
+  const approvedAmt=arr.filter(w=>w.status==='approved').reduce((s,w)=>s+(w.amount||0),0);
+  if($('wdStats')){
+    $('wdStats').innerHTML=`
+      <span class="badge pending" style="font-size:11px;padding:4px 10px">পেন্ডিং: $${pendingAmt.toFixed(2)}</span>
+      <span class="badge approved" style="font-size:11px;padding:4px 10px">অনুমোদিত: $${approvedAmt.toFixed(2)}</span>
+      <span class="badge" style="font-size:11px;padding:4px 10px;background:#f0f4f8;color:var(--text)">মোট: ${arr.length}টি</span>
+    `;
+  }
+  $('wdBody').innerHTML=arr.slice(0,100).map(w=>`<tr>
+    <td style="font-weight:600">${escapeHtml(w.name||'-')}</td>
+    <td>${escapeHtml(w.methodName||w.method||'')}</td>
+    <td class="num" style="font-size:11px">${escapeHtml(w.account||'')}</td>
+    <td class="num">$${parseFloat(w.amount||0).toFixed(2)}</td>
+    <td style="font-size:11px">${new Date(w.requestedAt||Date.now()).toLocaleDateString('bn-BD')}</td>
+    <td><span class="badge ${w.status}">${w.status}</span></td>
+    <td style="white-space:nowrap">${w.status==='pending'
+      ?`<button class="btn sm ok" onclick="approveWD('${w.id}')" style="margin-right:4px"><i class="ph-duotone ph-check-circle"></i></button><button class="btn sm danger" onclick="rejectWD('${w.id}')"><i class="ph-duotone ph-x-circle"></i></button>`
+      :'-'}
+    </td>
+  </tr>`).join('')||'<tr><td colspan="7"><div class="empty">কোন অনুরোধ নেই</div></td></tr>';
+}
+
+async function approveWD(id){
+  const w=withdrawals.find(x=>x.id===id);if(!w)return;
+  await db.ref('withdrawals/'+id).update({status:'approved',processedAt:Date.now(),processedBy:'admin'});
+  await db.ref('users/'+w.userId+'/totalWithdrawn').transaction(t=>(t||0)+w.amount);
+  showToast('অনুমোদিত হয়েছে','success');
+  logAction('withdraw',`Approved $${w.amount} for ${w.userId}`);
+}
+
+async function rejectWD(id){
+  const w=withdrawals.find(x=>x.id===id);if(!w)return;
+  const reason=prompt('বাতিলের কারণ লিখুন:','');
+  await db.ref('withdrawals/'+id).update({status:'rejected',processedAt:Date.now(),processedBy:'admin',rejectReason:reason||''});
+  await db.ref('users/'+w.userId+'/balance').transaction(b=>(b||0)+w.amount);
+  showToast('বাতিল হয়েছে — ব্যালেন্স ফেরত দেওয়া হয়েছে','warn');
+  logAction('withdraw',`Rejected $${w.amount} for ${w.userId}`);
+}
+
+/* ========= TASKS ========= */
+function renderTasks(){
+  const iconMap={telegram:'telegram-logo',youtube:'youtube-logo',facebook:'facebook-logo'};
+  $('taskList').innerHTML=tasks.map(t=>`
+    <div class="card" style="display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#e8f4fd,#d4eafa);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">
+        <i class="ph-duotone ph-${iconMap[t.type]||'link'}"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px">${escapeHtml(t.title)}</div>
+        <div style="font-size:11px;color:var(--text-sec);margin-top:2px;display:flex;align-items:center;gap:6px">
+          <span>${t.type}</span> <span>·</span> <span>$${parseFloat(t.reward||0).toFixed(2)}</span> <span>·</span>
+          <span class="badge ${t.active?'active':'inactive'}">${t.active?'Active':'Inactive'}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn sm outline" onclick="editTask('${t.id}')"><i class="ph-duotone ph-pencil-simple"></i></button>
+        <button class="btn sm danger" onclick="delTask('${t.id}')"><i class="ph-duotone ph-trash"></i></button>
+      </div>
+    </div>`).join('')||'<div class="empty"><i class="ph-duotone ph-list-checks"></i><div class="et">কোন টাস্ক নেই</div></div>';
+}
+
+function openTaskModal(){
+  $('tEditId').value='';$('tName').value='';$('tType').value='telegram';
+  $('tUrl').value='';$('tReward').value='';
+  $('tActive').classList.add('on');
+  $('taskModalTitle').textContent='নতুন টাস্ক';
+  $('taskModal').classList.add('open');
+}
+function editTask(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  $('tEditId').value=id;$('tName').value=t.title;$('tType').value=t.type||'other';
+  $('tUrl').value=t.url;$('tReward').value=t.reward;
+  $('tActive').classList.toggle('on',!!t.active);
+  $('taskModalTitle').textContent='টাস্ক সম্পাদনা';
+  $('taskModal').classList.add('open');
+}
+async function saveTask(){
+  const id=$('tEditId').value;
+  const data={title:$('tName').value.trim(),type:$('tType').value,url:$('tUrl').value.trim(),reward:parseFloat($('tReward').value)||0,active:$('tActive').classList.contains('on')};
+  if(!data.title||!data.url){showToast('নাম ও URL দিন','warn');return;}
+  if(id){await db.ref('tasks/'+id).update(data);}
+  else{data.createdAt=Date.now();await db.ref('tasks').push(data);}
+  closeM('taskModal');showToast('সংরক্ষণ সম্পন্ন','success');
+  logAction('task',`Task saved: ${data.title}`);
+}
+async function delTask(id){
+  if(!confirm('এই টাস্কটি ডিলিট করবেন?'))return;
+  await db.ref('tasks/'+id).remove();
+  showToast('ডিলিট হয়েছে','warn');
+  logAction('task',`Task deleted: ${id}`);
+}
+
+/* ========= BROADCAST ========= */
+async function sendBroadcast(){
+  const title=$('bcTitle').value.trim();
+  const body=$('bcBody').value.trim();
+  const showBanner=$('bcBanner').classList.contains('on');
+  if(!title){showToast('শিরোনাম দিন','warn');return;}
+  try{
+    const ref=await db.ref('notifications').push({
+      title,
+      body,
+      showBanner,
+      sentBy:'admin',
+      timestamp:Date.now()
+    });
+    console.log('[Broadcast] Sent, key:',ref.key);
+    $('bcTitle').value='';
+    $('bcBody').value='';
+    showToast(`✓ ব্রডকাস্ট পাঠানো হয়েছে (${users.length} ইউজার পাবেন)`,'success');
+    logAction('broadcast',`Sent: ${title}`);
+  }catch(e){
+    console.error('Broadcast error:',e);
+    showToast('ব্রডকাস্ট ব্যর্থ — '+e.message,'danger');
+  }
+}
+function renderBC(){
+  $('bcHistory').innerHTML=bcasts.map(b=>`
+    <div class="card" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div style="flex:1">
+        <div style="font-weight:700;margin-bottom:2px">${escapeHtml(b.title)}</div>
+        <div style="font-size:12px;color:var(--text-sec)">${escapeHtml(b.body||'')}</div>
+        <div style="font-size:10px;margin-top:6px;color:#9aa5b1;display:flex;align-items:center;gap:4px">
+          <i class="ph-duotone ph-clock" style="font-size:12px"></i>
+          ${new Date(b.timestamp||0).toLocaleString('bn-BD')}
+        </div>
+      </div>
+      <button class="btn sm danger" onclick="delBC('${b.id}')"><i class="ph-duotone ph-trash"></i></button>
+    </div>`).join('')||'<div class="empty"><i class="ph-duotone ph-megaphone"></i><div class="et">কোন ব্রডকাস্ট নেই</div></div>';
+}
+async function delBC(id){await db.ref('notifications/'+id).remove();showToast('ডিলিট হয়েছে','warn');}
+
+/* ========= ANALYTICS ========= */
+let charts={};
+Chart.defaults.font.family="'Poppins','Hind Siliguri',sans-serif";
+Chart.defaults.color='#6B7280';
+function drawCharts(){
+  const days=[];const earnD=[];const userD=[];
+  const now=Date.now();
+  for(let i=29;i>=0;i--){
+    const d=new Date(now-i*86400000);
+    const label=d.toLocaleDateString('en',{day:'2-digit',month:'short'});
+    days.push(label);
+    const dayStart=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+    const dayEnd=dayStart+86400000;
+    earnD.push(parseFloat(users.reduce((s,u)=>(u.createdAt>=dayStart&&u.createdAt<dayEnd?s+(u.totalEarned||0):s),0).toFixed(2)));
+    userD.push(users.filter(u=>u.createdAt>=dayStart&&u.createdAt<dayEnd).length);
+  }
+  Object.values(charts).forEach(c=>c?.destroy());
+  const sharedOpts={responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'#f0f4f8'},ticks:{font:{size:10}}}}};
+  charts.e=new Chart($('chartEarn'),{type:'line',data:{labels:days,datasets:[{label:'আয় ($)',data:earnD,borderColor:'#2AABEE',backgroundColor:'rgba(42,171,238,.1)',fill:true,tension:.4,pointRadius:2,pointBackgroundColor:'#2AABEE'}]},options:{...sharedOpts}});
+  charts.u=new Chart($('chartUsers'),{type:'bar',data:{labels:days,datasets:[{label:'নতুন ইউজার',data:userD,backgroundColor:'rgba(42,171,238,.7)',borderRadius:4}]},options:{...sharedOpts}});
+  const mc={};withdrawals.forEach(w=>{const m=w.methodName||w.method||'অন্যান্য';mc[m]=(mc[m]||0)+1;});
+  const colors=['#2AABEE','#00C851','#F59E0B','#FF3B30','#8B5CF6','#0088cc'];
+  charts.m=new Chart($('chartMethods'),{type:'doughnut',data:{labels:Object.keys(mc),datasets:[{data:Object.values(mc),backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}}}});
+}
+
+/* ========= LOGS ========= */
+function renderLogs(){
+  let arr=logs;
+  if(logFilter!=='all')arr=logs.filter(l=>l.type===logFilter);
+  $('logList').innerHTML=arr.map(l=>`
+    <div class="log-row">
+      <span class="ts">${new Date(l.ts).toLocaleString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+      <span class="badge active" style="flex-shrink:0">${l.type}</span>
+      <span class="act">${escapeHtml(l.desc)}</span>
+    </div>`).join('')||'<div class="empty"><i class="ph-duotone ph-scroll"></i><div class="et">কোন লগ নেই</div></div>';
+}
+
+/* ========= PAYMENT METHODS ========= */
+function renderPM(){
+  $('pmList').innerHTML=pmethods.map(m=>`
+    <div class="pm-item">
+      <div class="ico">${m.iconUrl?`<img src="${m.iconUrl}" style="width:36px;height:36px;border-radius:8px;object-fit:cover">`:`<i class="ph-duotone ph-credit-card"></i>`}</div>
+      <div class="info">
+        <div class="t">${escapeHtml(m.name)} <span class="badge ${m.active?'active':'inactive'}">${m.active?'Active':'Inactive'}</span></div>
+        <div class="m">সর্বনিম্ন $${m.minWithdraw||0} &nbsp;|&nbsp; সর্বোচ্চ ${m.maxWithdraw?'$'+m.maxWithdraw:'সীমাহীন'} &nbsp;|&nbsp; ${escapeHtml(m.processingTime||'')}</div>
+      </div>
+      <div class="acts">
+        <button class="btn sm outline" onclick="editPM('${m.key}')"><i class="ph-duotone ph-pencil-simple"></i></button>
+        <button class="btn sm danger" onclick="delPM('${m.key}')"><i class="ph-duotone ph-trash"></i></button>
+      </div>
+    </div>`).join('')||'<div class="empty"><i class="ph-duotone ph-credit-card"></i><div class="et">কোন পদ্ধতি নেই</div></div>';
+}
+
+function openPMModal(){
+  $('pmIsEdit').value='0';$('pmModalTitle').textContent='নতুন পদ্ধতি';
+  ['pmName','pmKey','pmIconUrl','pmAccountLabel','pmAccountPlaceholder','pmProcessingTime','pmInstructions'].forEach(i=>$(i).value='');
+  $('pmMinWithdraw').value=5;$('pmMaxWithdraw').value=0;
+  $('pmActive').classList.add('on');$('pmKey').disabled=false;
+  $('pmModal').classList.add('open');
+}
+function editPM(key){
+  const m=pmethods.find(x=>x.key===key);if(!m)return;
+  $('pmIsEdit').value='1';$('pmModalTitle').textContent='পদ্ধতি সম্পাদনা';
+  $('pmName').value=m.name||'';$('pmKey').value=m.key;$('pmKey').disabled=true;
+  $('pmIconUrl').value=m.iconUrl||'';
+  $('pmAccountLabel').value=m.accountLabel||'';$('pmAccountPlaceholder').value=m.accountPlaceholder||'';
+  $('pmMinWithdraw').value=m.minWithdraw||5;$('pmMaxWithdraw').value=m.maxWithdraw||0;
+  $('pmProcessingTime').value=m.processingTime||'';$('pmInstructions').value=m.instructions||'';
+  $('pmActive').classList.toggle('on',!!m.active);
+  $('pmModal').classList.add('open');
+}
+async function savePaymentMethod(){
+  const key=$('pmKey').value.trim().toLowerCase().replace(/\s+/g,'_');
+  if(!key||!$('pmName').value.trim()){showToast('নাম ও Key দিন','warn');return;}
+  const data={
+    name:$('pmName').value.trim(),key,
+    iconUrl:$('pmIconUrl').value.trim(),
+    accountLabel:$('pmAccountLabel').value.trim(),
+    accountPlaceholder:$('pmAccountPlaceholder').value.trim(),
+    minWithdraw:parseFloat($('pmMinWithdraw').value)||5,
+    maxWithdraw:parseFloat($('pmMaxWithdraw').value)||0,
+    processingTime:$('pmProcessingTime').value.trim(),
+    instructions:$('pmInstructions').value.trim(),
+    active:$('pmActive').classList.contains('on'),
+    order:Date.now()
+  };
+  await db.ref('withdrawMethods/'+key).set(data);
+  showToast(`${data.name} সংরক্ষণ হয়েছে`,'success');
+  closeM('pmModal');
+  logAction('settings',`Payment method saved: ${data.name}`);
+}
+async function delPM(key){
+  if(!confirm('এই পদ্ধতিটি ডিলিট করবেন?'))return;
+  await db.ref('withdrawMethods/'+key).remove();
+  showToast('ডিলিট হয়েছে','warn');
+  logAction('settings',`Payment method deleted: ${key}`);
+}
+
+/* ========= SETTINGS ========= */
+let _settingsRendered=false; // render once; re-render only on explicit refresh
+function makeRow(icon,label,key,type='text',hint=''){
+  const val=settings[key]??'';
+  return `<div class="set-row">
+    <div class="ic"><i class="ph-duotone ph-${icon}"></i></div>
+    <div><div class="lbl">${label}</div>${hint?`<div class="hint">${hint}</div>`:''}</div>
+    <input id="s_${key}" type="${type}" value="${escapeHtml(String(val))}">
+    <button class="save" onclick="saveSet('${key}','${type}')"><i class="ph-duotone ph-floppy-disk"></i></button>
+  </div>`;
+}
+async function saveSet(key,type){
+  const el=$('s_'+key);
+  if(!el){showToast('ইনপুট পাওয়া যায়নি','danger');return;}
+  const v=el.value.trim();
+  const val=type==='number'?parseFloat(v)||0:v;
+  try{
+    _settingsRendered=false; // allow one re-render after save to sync value
+    await db.ref('settings/'+key).set(val);
+    showToast('সংরক্ষিত ✓','success');
+    logAction('settings',`${key} = ${val}`);
+  }catch(e){
+    console.error('saveSet error:',e);
+    showToast('সেভ ব্যর্থ — Firebase Rules চেক করুন','danger');
+  }
+}
+function renderSettings(){
+  // Skip re-render if already rendered and a settings field is focused
+  const focused=document.activeElement;
+  const isEditingSettings=focused && focused.closest && focused.closest('.set-row');
+  if(_settingsRendered && isEditingSettings)return;
+  _settingsRendered=true;
+
+  $('setAppInfo').innerHTML=
+    makeRow('app-window','App Name','appName','text','Telegram Mini App এর নাম')+
+    makeRow('robot','Bot Username','botUsername','text','Telegram Bot username (@ছাড়া)')+
+    makeRow('headset','Support Username','supportUsername','text','Support channel username');
+  $('setAds').innerHTML=
+    makeRow('television','Monetag Zone ID','monetagZoneId','text','Monetag dashboard থেকে Zone ID')+
+    makeRow('currency-dollar','Per Ad Earning ($)','perAdEarning','number','প্রতি বিজ্ঞাপনে ইউজার কত পাবে')+
+    makeRow('hash','Daily Ad Limit','dailyLimit','number','প্রতিদিন সর্বোচ্চ কতটি বিজ্ঞাপন');
+  $('setEcon').innerHTML=makeRow('gift','Referral Bonus ($)','referralBonus','number','প্রতিটি রেফারেলে কত বোনাস পাবে');
+  $('setSpin').innerHTML=
+    makeRow('calendar-check','Daily Free Cards','dailyFreeCards','number')+
+    makeRow('shopping-bag','1× Card Price ($)','spinCard1Price','number')+
+    makeRow('shopping-bag','5× Card Price ($)','spinCard5Price','number')+
+    makeRow('shopping-bag','10× Card Price ($)','spinCard10Price','number')+
+    `<div class="set-row">
+      <div class="ic"><i class="ph-duotone ph-circles-three-plus"></i></div>
+      <div><div class="lbl">Spin Rewards</div><div class="hint">কমা দিয়ে আলাদা করুন (যেমন: 0.1,0.5,1)</div></div>
+      <input id="s_spinRewards" value="${(settings.spinRewards||[]).join(',')}" style="width:180px">
+      <button class="save" onclick="saveSpinRewards()"><i class="ph-duotone ph-floppy-disk"></i></button>
+    </div>`;
+  let ch='';
+  const cr=settings.checkinRewards||[0.01,0.02,0.03,0.05,0.08,0.12,0.2];
+  for(let i=0;i<7;i++){
+    ch+=`<div class="set-row">
+      <div class="ic" style="font-weight:700;font-size:14px">${i+1}</div>
+      <div class="lbl">দিন ${i+1} রিওয়ার্ড ($)</div>
+      <input id="s_ci_${i}" type="number" step="0.01" value="${cr[i]||0}">
+      <button class="save" onclick="saveCheckin(${i})"><i class="ph-duotone ph-floppy-disk"></i></button>
+    </div>`;
+  }
+  $('setCheckin').innerHTML=ch;
+  $('setVIP').innerHTML=
+    makeRow('medal','Silver Threshold (মোট আয়)','vipSilver','number')+
+    makeRow('medal','Gold Threshold (মোট আয়)','vipGold','number')+
+    makeRow('diamond','Platinum Threshold (মোট আয়)','vipPlatinum','number');
+  $('maintToggle').classList.toggle('on',!!settings.maintenance);
+}
+async function saveSpinRewards(){
+  const arr=$('s_spinRewards').value.split(',').map(x=>parseFloat(x.trim())||0).filter(x=>x>=0);
+  try{
+    _settingsRendered=false;
+    await db.ref('settings/spinRewards').set(arr);
+    showToast('সংরক্ষিত ✓','success');
+  }catch(e){showToast('সেভ ব্যর্থ','danger');}
+}
+async function saveCheckin(i){
+  const cr=settings.checkinRewards||[0.01,0.02,0.03,0.05,0.08,0.12,0.2];
+  cr[i]=parseFloat($('s_ci_'+i).value)||0;
+  try{
+    _settingsRendered=false;
+    await db.ref('settings/checkinRewards').set(cr);
+    showToast('সংরক্ষিত ✓','success');
+  }catch(e){showToast('সেভ ব্যর্থ','danger');}
+}
+async function toggleMaint(el){
+  el.classList.toggle('on');
+  try{
+    await db.ref('settings/maintenance').set(el.classList.contains('on'));
+    showToast('সংরক্ষিত ✓','success');
+    logAction('settings','Maintenance mode toggled');
+  }catch(e){showToast('সেভ ব্যর্থ','danger');}
+}
+
+/* ========= OFFICERS ========= */
+function renderOfficers(){
+  $('offList').innerHTML=officers.map(o=>`
+    <div class="officer-item">
+      <div><b>${escapeHtml(o.name||'-')}</b> <span class="num" style="color:var(--text-sec);font-size:11px">${o.id}</span></div>
+      <button class="btn sm danger" onclick="delOfficer('${o.id}')"><i class="ph-duotone ph-trash"></i></button>
+    </div>`).join('')||'<div style="color:var(--text-sec);font-size:12px">কোন অফিসার নেই</div>';
+}
+async function addOfficer(){
+  const uid=$('offUid').value.trim();const name=$('offName').value.trim();
+  if(!uid||!name){showToast('UID ও নাম দিন','warn');return;}
+  await db.ref('officers/'+uid).set({name,addedAt:Date.now()});
+  $('offUid').value='';$('offName').value='';
+  showToast('অফিসার যোগ হয়েছে','success');
+}
+async function delOfficer(id){
+  await db.ref('officers/'+id).remove();
+  showToast('সরানো হয়েছে','warn');
+}
+
+function closeM(id){$(id).classList.remove('open');}
+</script>
+</body>
+</html>
